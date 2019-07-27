@@ -11,7 +11,6 @@ check:
 	twine check dist/*
 
 upload: build check
-	env
 	twine upload dist/*
 
 test_upload: build check
