@@ -1,0 +1,9 @@
+
+/.envrc
+
+/ruv_dl.egg-info/
+
+/venv/
+
+/ruv_dl/__pycache__/
+
