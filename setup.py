@@ -2,7 +2,7 @@ import os
 
 from setuptools import setup
 
-VERSION = '0.1.2'
+VERSION = '0.1.3'
 
 ROOT = os.path.abspath(os.path.dirname(__file__))
 
