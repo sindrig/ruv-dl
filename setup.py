@@ -2,7 +2,7 @@ import os
 
 from setuptools import setup
 
-VERSION = '0.1.0'
+VERSION = '0.1.1'
 
 ROOT = os.path.abspath(os.path.dirname(__file__))
 
@@ -13,10 +13,10 @@ with open(os.path.join(ROOT, 'README.md')) as f:
 setup(
     name='ruv-dl',
     version=VERSION,
-    description='Command line interface for RUV (http://www.ruv.is)',
+    description='Downloader/organizer for ruv programs',
     long_description=readme,
     long_description_content_type='text/markdown',
-    url='https://github.com/hjalti/ruv-cli',
+    url='https://github.com/sindrig/ruv-dl',
     author='Sindri Guðmundsson',
     author_email='sindrigudmundsson@gmail.com',
     license='GPLv3',
