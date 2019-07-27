@@ -86,6 +86,12 @@ def run(args):
 
 def main():
     parser = argparse.ArgumentParser()
+    # TODO: Subparser for other stuff and split this up.
+    parser.add_argument(
+        'action',
+        help='Action to run.',
+        choices=['download'],
+    )
     query_arg = parser.add_argument(
         'query',
         help='Search terms to search for programs.',
