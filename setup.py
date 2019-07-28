@@ -2,7 +2,7 @@ import os
 
 from setuptools import setup
 
-VERSION = '0.2.0'
+VERSION = '0.2.1'
 
 ROOT = os.path.abspath(os.path.dirname(__file__))
 
@@ -19,7 +19,7 @@ setup(
     url='https://github.com/sindrig/ruv-dl',
     author='Sindri Guðmundsson',
     author_email='sindrigudmundsson@gmail.com',
-    license='GPLv3',
+    license='MIT',
     packages=['ruv_dl'],
     python_requires='>=3.6.0',
     install_requires=[
@@ -31,8 +31,7 @@ setup(
         ],
     },
     classifiers=[
-        'License :: OSI Approved :: '
-        'GNU Lesser General Public License v3 (LGPLv3)',
+        'License :: OSI Approved :: MIT License',
         'Development Status :: 4 - Beta',
         'Environment :: Console',
         'Programming Language :: Python',
