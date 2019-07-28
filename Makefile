@@ -10,8 +10,8 @@ build: clean
 check:
 	twine check dist/*
 
-upload: build check
+pypi: build check
 	twine upload dist/*
 
-test_upload: build check
+test_pypi: build check
 	twine upload --repository-url https://test.pypi.org/legacy/ dist/*
