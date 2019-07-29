@@ -24,6 +24,7 @@ setup(
     python_requires='>=3.6.0',
     install_requires=[
         'requests==2.22.0',
+        'click==7.0',
     ],
     entry_points={
         'console_scripts': [

@@ -1,10 +1,10 @@
 #!/usr/bin/env python
-import argparse
 import itertools
 import os
 import shutil
 import logging
 import sys
+import click
 import multiprocessing
 from multiprocessing.pool import ThreadPool
 
@@ -24,15 +24,83 @@ logger.addHandler(handler)
 logger.setLevel(logging.WARN)
 
 
-def run(args):
-    fetcher = ProgramFetcher(args.query, args.update, args.destination)
+@click.group()
+@click.option('--dryrun/--no-dryrun', default=False)
+@click.option('-v', '--verbosity', count=True)
+@click.option('--empty-cache', default=False, is_flag=True)
+@click.pass_context
+def cli(ctx, dryrun, verbosity, empty_cache):
+    ctx.obj['dryrun'] = dryrun
+    if verbosity is not None:
+        multiprocessing_logger = multiprocessing.get_logger()
+        if verbosity > 2:
+            multiprocessing_logger.addHandler(handler)
+            multiprocessing_logger.setLevel(logging.DEBUG)
+        if verbosity > 1:
+            logger.setLevel(logging.DEBUG)
+            multiprocessing_logger.addHandler(handler)
+            multiprocessing_logger.setLevel(logging.INFO)
+        elif verbosity > 0:
+            logger.setLevel(logging.INFO)
+
+    if empty_cache:
+        if os.path.exists(CACHE_LOCATION):
+            shutil.rmtree(CACHE_LOCATION)
+    os.makedirs(CACHE_LOCATION, exist_ok=True)
+
+
+@cli.command()
+@click.argument(
+    'query',
+    nargs=-1,
+    type=click.STRING,
+)
+@click.option(
+    '-u', '--update', default=False, is_flag=True,
+    help='Search for all saved shows in `--destination` and download '
+    'available episodes',
+)
+@click.option(
+    '-d', '--destination', default=DEFAULT_VIDEO_DESTINATION,
+    type=click.Path(),
+    help='Top level destination directory.',
+)
+@click.option(
+    '--days-between-episodes', type=click.INT, default=7,
+    help='Rate of episode release',
+)
+@click.option(
+    '--iteration-count', type=click.INT, default=5,
+    help='Maximum passes to allow for no shows found.',
+)
+@click.option(
+    '--sequential', default=False, is_flag=True,
+    help='Do not run threaded, only download one file at a time.',
+)
+@click.pass_context
+def download(
+    ctx, query, update, destination, days_between_episodes, iteration_count,
+    sequential,
+):
+    '''
+        Download ruv programs by searching for query (can specify multiple)
+        or update your currently synced programs.
+    '''
+    if bool(query) == bool(update):
+        click.echo(download.get_help(ctx))
+        raise click.UsageError(
+            'Query terms and update are mutually exclusive and either must '
+            'be included'
+        )
+    os.makedirs(destination, exist_ok=True)
+    fetcher = ProgramFetcher(query, update, destination)
     with ThreadPool(8) as pool:
         programs = {}
         for program in fetcher.get_programs():
             logger.info(f'------ {program["title"]} [{program["id"]}] ------')
             crawler = Crawler(
-                days_between_episodes=args.days_between_episodes,
-                iteration_count=args.iteration_count,
+                days_between_episodes=days_between_episodes,
+                iteration_count=iteration_count,
                 program=program,
             )
             programs[program['id']] = {
@@ -45,10 +113,10 @@ def run(args):
         downloaders = []
         for program_id, data in programs.items():
             downloader = Downloader(
-                destination=args.destination,
+                destination=destination,
                 program=data['program'],
                 episode_entries=data['episodes'].get(),
-                threaded=not args.sequential,
+                threaded=not sequential,
             )
             entries = downloader.organize()
             downloaders.append((downloader, entries))
@@ -60,10 +128,10 @@ def run(args):
         logger.info('No entries to download, bye')
     else:
         logger.warning(f'Downloading {total_entries_to_download} files...')
-        if args.dryrun:
+        if ctx.obj['dryrun']:
             logger.warning('Dryrun, not downloading anything, bye')
             return
-        if args.sequential:
+        if sequential:
             results = [
                 [
                     downloader.download_file(entry)
@@ -85,77 +153,4 @@ def run(args):
 
 
 def main():
-    parser = argparse.ArgumentParser()
-    # TODO: Subparser for other stuff and split this up.
-    parser.add_argument(
-        'action',
-        help='Action to run.',
-        choices=['download'],
-    )
-    query_arg = parser.add_argument(
-        'query',
-        help='Search terms to search for programs.',
-        nargs='*',
-    )
-    parser.add_argument(
-        '-u', '--update',
-        action='store_true',
-        help='Search for all saved shows in `--destination` and download '
-        'available episodes'
-    )
-    parser.add_argument(
-        '--destination', default=DEFAULT_VIDEO_DESTINATION, nargs='?',
-        type=os.path.abspath,
-        help='Top level destination directory.'
-    )
-    parser.add_argument(
-        '--days-between-episodes', type=int, default=7, nargs='?',
-        help='Rate of episode release.'
-    )
-    parser.add_argument(
-        '--iteration-count', type=int, default=5, nargs='?',
-        help='Maximum days to allow for now shows found.'
-    )
-    parser.add_argument(
-        '--empty-cache',
-        action='store_true',
-        help='Empty request cache to api.ruv.is before running.'
-    )
-    parser.add_argument(
-        '--sequential',
-        action='store_true',
-        help='Do not run threaded, only download one file at a time.'
-    )
-    parser.add_argument(
-        '--dryrun',
-        action='store_true',
-        help='Only search and organize episodes, do not download them.'
-    )
-    parser.add_argument(
-        '-v', '--verbosity', action='count',
-        help='Increase output verbosity'
-    )
-    args = parser.parse_args()
-    if bool(args.query) == bool(args.update):
-        raise argparse.ArgumentError(
-            query_arg,
-            'Query terms and update are mutually exclusive and either must '
-            'be included'
-        )
-    if args.verbosity is not None:
-        multiprocessing_logger = multiprocessing.get_logger()
-        if args.verbosity > 2:
-            multiprocessing_logger.addHandler(handler)
-            multiprocessing_logger.setLevel(logging.DEBUG)
-        if args.verbosity > 1:
-            logger.setLevel(logging.DEBUG)
-            multiprocessing_logger.addHandler(handler)
-            multiprocessing_logger.setLevel(logging.INFO)
-        elif args.verbosity > 0:
-            logger.setLevel(logging.INFO)
-    if args.empty_cache:
-        if os.path.exists(CACHE_LOCATION):
-            shutil.rmtree(CACHE_LOCATION)
-    os.makedirs(args.destination, exist_ok=True)
-    os.makedirs(CACHE_LOCATION, exist_ok=True)
-    run(args)
+    cli(obj={})
