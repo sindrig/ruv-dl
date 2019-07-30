@@ -8,5 +8,5 @@ jobs:
       - checkout
       - run: tox
       - store_test_results:
-        path: test-results
+          path: test-results
 
