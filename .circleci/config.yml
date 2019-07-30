@@ -7,3 +7,6 @@ jobs:
     steps:
       - checkout
       - run: tox
+      - store_test_results:
+        path: test-results
+

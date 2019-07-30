@@ -15,3 +15,5 @@ __pycache__/
 /.python-version
 
 /.tox/
+
+/test-results/
