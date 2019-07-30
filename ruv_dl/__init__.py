@@ -11,6 +11,7 @@ from multiprocessing.pool import ThreadPool
 from ruv_dl.programs import ProgramFetcher
 from ruv_dl.crawler import Crawler
 from ruv_dl.downloader import Downloader
+from ruv_dl.migrations import MIGRATIONS
 from ruv_dl.constants import DEFAULT_VIDEO_DESTINATION, CACHE_LOCATION
 
 
@@ -28,9 +29,15 @@ logger.setLevel(logging.WARN)
 @click.option('--dryrun/--no-dryrun', default=False)
 @click.option('-v', '--verbosity', count=True)
 @click.option('--empty-cache', default=False, is_flag=True)
+@click.option(
+    '-d', '--destination', default=DEFAULT_VIDEO_DESTINATION,
+    type=click.Path(),
+    help='Top level destination directory.',
+)
 @click.pass_context
-def cli(ctx, dryrun, verbosity, empty_cache):
+def cli(ctx, dryrun, verbosity, empty_cache, destination):
     ctx.obj['dryrun'] = dryrun
+    ctx.obj['destination'] = destination
     if verbosity is not None:
         multiprocessing_logger = multiprocessing.get_logger()
         if verbosity > 2:
@@ -61,11 +68,6 @@ def cli(ctx, dryrun, verbosity, empty_cache):
     'available episodes',
 )
 @click.option(
-    '-d', '--destination', default=DEFAULT_VIDEO_DESTINATION,
-    type=click.Path(),
-    help='Top level destination directory.',
-)
-@click.option(
     '--days-between-episodes', type=click.INT, default=7,
     help='Rate of episode release',
 )
@@ -79,13 +81,14 @@ def cli(ctx, dryrun, verbosity, empty_cache):
 )
 @click.pass_context
 def download(
-    ctx, query, update, destination, days_between_episodes, iteration_count,
+    ctx, query, update, days_between_episodes, iteration_count,
     sequential,
 ):
     '''
         Download ruv programs by searching for query (can specify multiple)
         or update your currently synced programs.
     '''
+    destination = ctx.obj['destination']
     if bool(query) == bool(update):
         click.echo(download.get_help(ctx))
         raise click.UsageError(
@@ -150,6 +153,14 @@ def download(
             f'{len([r for r in itertools.chain(*results) if r])} '
             'files downloaded'
         )
+
+
+@cli.command()
+@click.argument('migration', type=click.INT)
+@click.pass_context
+def migrate(ctx, migration):
+    for entry in MIGRATIONS[migration]:
+        entry(dryrun=ctx.obj['dryrun'], destination=ctx.obj['destination'])
 
 
 def main():

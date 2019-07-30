@@ -1,4 +1,3 @@
-import json
 import itertools
 import os
 import logging
@@ -6,10 +5,13 @@ import time
 
 import requests
 
-from ruv_dl.data import Entry
+from ruv_dl.data import Entry, EntrySet
+from ruv_dl.programs import ProgramInfo
 from ruv_dl.constants import PROGRAM_INFO_FN
+from ruv_dl.migrations import MIGRATIONS
 
 logger = logging.getLogger(__name__)
+PROGRAM_INFO_VERSION = max(MIGRATIONS.keys())
 
 
 class Downloader:
@@ -20,6 +22,7 @@ class Downloader:
         self.threaded = threaded
 
     def organize(self):
+        # TODO: Use ProgramInfo class
         logger.info(f'Organizing {self.program["title"]}')
         info_fn = os.path.join(
             self.destination,
@@ -28,15 +31,11 @@ class Downloader:
         )
         os.makedirs(os.path.dirname(info_fn), exist_ok=True)
         try:
-            with open(info_fn, 'r') as f:
-                # We store the program info next to the season episodes
-                seasons = {
-                    key: {Entry.from_dict(entry) for entry in entries}
-                    for key, entries in json.loads(f.read()).items()
-                    if key != 'program'
-                }
+            program_info = ProgramInfo(info_fn)
         except FileNotFoundError:
-            seasons = {}
+            program_info = ProgramInfo(info_fn, initialize_empty=True)
+        seasons = program_info.seasons
+        program_info.program = self.program
         # seasons = {
         #     1: {entry, entry, entry},
         #     2: {entry, entry, entry},
@@ -54,25 +53,26 @@ class Downloader:
                     seasons[season].add(entry)
                     break
             else:
-                seasons[max((seasons or {0: 0}).keys()) + 1] = {entry}
+                season = max((seasons or {0: 0}).keys()) + 1
+                seasons[season] = EntrySet([entry])
         # Calculate target paths for entries
         for season, entries in seasons.items():
-            season_folder = os.path.join(
-                self.destination,
-                self.program['title'],
-                f'Season {season}',
+            season_folder = Entry.get_season_folder(
+                self.destination, self.program, season
             )
             os.makedirs(season_folder, exist_ok=True)
-            for i, entry in enumerate(
-                sorted(entries, key=lambda entry: entry.date)
-            ):
-                fn = (
-                    f'{self.program["title"]} - '
-                    f'S{str(season).zfill(2)}E{str(i + 1).zfill(2)}.mp4'
+            for i, entry in enumerate(entries.sorted()):
+                if not entry.episode.number:
+                    entry.episode.number = EntrySet.find_target_number(
+                        entries, i
+                    )
+                basename = entry.get_target_basename(
+                    self.program,
+                    season,
                 )
                 target_path = os.path.join(
                     season_folder,
-                    fn,
+                    basename,
                 )
                 entry.set_target_path(target_path)
         # Finally, make sure we don't have the same etag multiple times,
@@ -84,13 +84,25 @@ class Downloader:
             ]:
                 entries.remove(entry)
             found_etags += [entry.etag for entry in entries]
-        with open(info_fn, 'w') as f:
-            serialized_data = {
-                season: [entry.to_dict() for entry in entries]
-                for season, entries in seasons.items()
-            }
-            serialized_data['program'] = self.program
-            f.write(json.dumps(serialized_data, indent=4))
+
+        program_info.seasons = seasons
+        program_info.write()
+
+        missing_migrations = range(
+            program_info.version,
+            PROGRAM_INFO_VERSION,
+        )
+        for migration_entry in missing_migrations:
+            logger.error(
+                'Missing migration %d. Run `ruv-dl migrate %d`. You can '
+                'supply `--dryrun` (e.g. `ruv-dl --dryrun migrate ...`) to '
+                'see what will be done.',
+                migration_entry + 1,
+                migration_entry + 1,
+            )
+        if missing_migrations:
+            return []
+
         return [
             entry
             for entry in itertools.chain(*seasons.values())

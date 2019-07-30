@@ -31,7 +31,7 @@ class Crawler:
             ])
         )
 
-    def get_entry(self, date, fn):
+    def get_entry(self, date, fn, episode=None):
         cache_key = f'{date.strftime(DATE_FORMAT)}-{fn}'
         if (
             not self.cache.has(cache_key)
@@ -85,6 +85,7 @@ class Crawler:
                 url=info['url'],
                 date=date,
                 etag=info['etag'],
+                episode=episode,
             )
         elif (
             # Don't remove unless we last checked before the show was aired
@@ -158,7 +159,7 @@ class Crawler:
                 )
                 continue
             fn = wanted_stream.split('/')[-1].split('.')[0]
-            first_entry = self.get_entry(date, fn)
+            first_entry = self.get_entry(date, fn, episode=episode)
             if not first_entry:
                 raise RuntimeError('Could not get url for first episode...?')
             files.add(first_entry)

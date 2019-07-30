@@ -5,9 +5,13 @@
 
 /venv/
 
-/ruv_dl/__pycache__/
+__pycache__/
 
 
 /build/
 
 /dist/
+
+/.python-version
+
+/.tox/

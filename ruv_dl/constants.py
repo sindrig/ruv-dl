@@ -9,6 +9,7 @@ URL_TEMPLATE = (
 
 
 PROGRAM_INFO_FN = 'program_info.json'
+NON_SEASON_FIELDS = ('program', '__version__')
 
 CACHE_LOCATION = os.path.join(os.path.expanduser('~'), '.ruvdlcache')
 # In case we change the cache setup, change the cache version value and we

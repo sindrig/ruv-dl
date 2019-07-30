@@ -6,15 +6,89 @@ import glob
 
 import requests
 
-from ruv_dl.constants import PROGRAM_INFO_FN
+from ruv_dl.data import Entry, EntrySet
+from ruv_dl.constants import PROGRAM_INFO_FN, NON_SEASON_FIELDS
 
 logger = logging.getLogger(__name__)
+
+
+class ProgramInfo:
+    def __init__(self, fn, initialize_empty=False):
+        self.fn = fn
+        if initialize_empty:
+            self._data = {
+                '__version__': 1
+            }
+        else:
+            with open(fn, 'r') as f:
+                try:
+                    data = json.loads(f.read())
+                except ValueError:
+                    logger.info('Could not parse %s', fn)
+                else:
+                    if 'program' in data:
+                        if 'id' in data['program']:
+                            self._data = data
+                        else:
+                            logger.info(
+                                'Could not get program id from %s',
+                                data["program"],
+                            )
+                    else:
+                        logger.info('Could not get program from %s', data)
+
+    def __str__(self):
+        return f'[{self.fn}: Version {self.version}]'
+
+    @property
+    def program(self):
+        return self._data['program']
+
+    @program.setter
+    def program(self, program):
+        self._data['program'] = program
+
+    @property
+    def version(self):
+        return self._data.get('__version__', 0)
+
+    @version.setter
+    def version(self, version):
+        self._data['__version__'] = version
+
+    def write(self):
+        with open(self.fn, 'w') as f:
+            f.write(json.dumps(self._data, indent=4))
+
+    def is_valid(self):
+        return hasattr(self, '_data')
+
+    @property
+    def seasons(self):
+        return {
+            key: EntrySet(Entry.from_dict(entry) for entry in entries)
+            for key, entries in self._data.items()
+            if key not in NON_SEASON_FIELDS
+        }
+
+    @seasons.setter
+    def seasons(self, seasons):
+        keys = list(
+            key for key in self._data.keys()
+            if key not in NON_SEASON_FIELDS
+        )
+        for key in keys:
+            del self._data[key]
+        for key, entries in seasons.items():
+            self._data[key] = [entry.to_dict() for entry in entries.sorted()]
 
 
 class ProgramFetcher:
     pool = None
 
-    def __init__(self, query, update, destination):
+    def __init__(self, query=None, update=None, destination=None):
+        if not destination:
+            raise RuntimeError('Missing required destination parameter')
         self.query = query
         self.update = update
         self.destination = destination
@@ -58,21 +132,14 @@ class ProgramFetcher:
                 if selection > 0 and selection <= len(programs):
                     return programs[selection - 1]['id']
 
-    def get_programs_to_update(self):
-        for program_info in glob.glob(
+    def get_all_program_infos(self):
+        for fn in glob.glob(
             os.path.join(self.destination, '*', PROGRAM_INFO_FN)
         ):
-            with open(program_info, 'r') as f:
-                try:
-                    data = json.loads(f.read())
-                except ValueError:
-                    logger.info(f'Could not parse {program_info}')
-                if 'program' in data:
-                    if 'id' in data['program']:
-                        yield data['program']
-                    else:
-                        logger.info(
-                            f'Could not get program id from {data["program"]}'
-                        )
-                else:
-                    logger.info(f'Could not get program from {data}')
+            program_info = ProgramInfo(fn)
+            if program_info.is_valid():
+                yield program_info
+
+    def get_programs_to_update(self):
+        for program_info in self.get_all_program_infos():
+            yield program_info.program
