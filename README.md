@@ -1,6 +1,6 @@
 Sync available ruv programs to your computer
 
-[![CircleCI](https://circleci.com/gh/sindrig/ruv-dl.svg?style=svg)](https://circleci.com/gh/sindrig/ruv-dl)
+Build: [![CircleCI](https://circleci.com/gh/sindrig/ruv-dl.svg?style=svg)](https://circleci.com/gh/sindrig/ruv-dl)
 
 # Installation
 
