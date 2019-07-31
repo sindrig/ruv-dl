@@ -110,6 +110,13 @@ class EntrySet(set):
         for k in range(0, len(entries)):
             if entries[k].episode and entries[k].episode.id:
                 target = entries[k].episode.number + i - k
+                if target < 1:
+                    logger.warning(
+                        'Found strange episode number. You probably want to '
+                        'manually fix this entry: %s',
+                        entries[i],
+                    )
+                    target += len(entries)
                 logger.info(
                     'Found related episode in %d for %d: %s, '
                     'target number is %d',
@@ -119,6 +126,13 @@ class EntrySet(set):
                     target
                 )
                 return target
+        logger.warning(
+            'Found no episode number for %s, assigning it 1 '
+            '(number of entries: %d)',
+            entries[i],
+            len(entries),
+        )
+        return 1
 
     def _choose_best_item(self, item, member):
         if item.episode and item.episode.id:

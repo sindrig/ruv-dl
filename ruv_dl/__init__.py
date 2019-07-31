@@ -132,6 +132,10 @@ def download(
     else:
         logger.warning(f'Downloading {total_entries_to_download} files...')
         if ctx.obj['dryrun']:
+            for downloader, entries in downloaders:
+                logger.info(downloader.program['title'])
+                for entry in entries:
+                    logger.info('%s: %d', entry, entry.episode.number)
             logger.warning('Dryrun, not downloading anything, bye')
             return
         if sequential:

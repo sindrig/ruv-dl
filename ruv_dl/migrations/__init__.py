@@ -1,4 +1,5 @@
 import logging
+import tempfile
 import os
 import copy
 import shutil
@@ -24,8 +25,7 @@ def move_old_locations(destination, dryrun=False):
         program = program_info.program
         logger.info('Targeting %s', program['title'])
         seasons = program_info.seasons
-        # {current_path: new_path}
-        files_to_move = {}
+        files_to_move = []
         for season, entries in seasons.items():
             season_folder = Entry.get_season_folder(
                 destination, program, season
@@ -50,17 +50,31 @@ def move_old_locations(destination, dryrun=False):
                     target_entry.get_target_basename(program, season),
                 )
 
-                if os.path.isfile(src_dest):
-                    files_to_move[src_dest] = target_dest
-        if dryrun:
-            logger.warning('Running with dryrun, no change to filesystem')
-            for current, target in files_to_move.items():
-                logger.info('Would move %s to %s', current, target)
-        else:
-            for current, target in files_to_move.items():
-                os.makedirs(os.path.dirname(target), exist_ok=True)
-                logger.info('Moving %s to %s', current, target)
-                shutil.move(current, target)
+                if src_dest != target_dest and os.path.isfile(src_dest):
+                    files_to_move.append((src_dest, target_dest))
+        while files_to_move:
+            i = 0
+            src_dest, target_dest = files_to_move.pop(0)
+            if dryrun:
+                logger.info('Would move %s to %s', src_dest, target_dest)
+            elif os.path.isfile(target_dest):
+                temp_path = next(tempfile._get_candidate_names())
+                temp_path = os.path.join(
+                    os.path.dirname(target_dest),
+                    temp_path,
+                )
+                logger.info(
+                    '%s exists. Moving temporarily to %s and postponing',
+                    target_dest, temp_path,
+                )
+                shutil.move(src_dest, temp_path)
+                files_to_move.append((temp_path, target_dest))
+            else:
+                os.makedirs(os.path.dirname(target_dest), exist_ok=True)
+                logger.info('Moving %s to %s', src_dest, target_dest)
+                shutil.move(src_dest, target_dest)
+
+        if not dryrun:
             program_info.version = 1
             program_info.write()
 

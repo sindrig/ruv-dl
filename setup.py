@@ -1,8 +1,8 @@
 import os
 
-from setuptools import setup
+from setuptools import setup, find_packages
 
-VERSION = '0.2.1'
+VERSION = '0.2.1.rc10'
 
 ROOT = os.path.abspath(os.path.dirname(__file__))
 
@@ -20,7 +20,7 @@ setup(
     author='Sindri Guðmundsson',
     author_email='sindrigudmundsson@gmail.com',
     license='MIT',
-    packages=['ruv_dl'],
+    packages=find_packages(),
     python_requires='>=3.6.0',
     install_requires=[
         'requests==2.22.0',
