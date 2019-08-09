@@ -2,7 +2,7 @@ import os
 
 from setuptools import setup, find_packages
 
-VERSION = '0.2.1.rc10'
+VERSION = '0.3.1'
 
 ROOT = os.path.abspath(os.path.dirname(__file__))
 

@@ -66,9 +66,10 @@ class ProgramInfo:
     @property
     def seasons(self):
         return {
-            key: EntrySet(Entry.from_dict(entry) for entry in entries)
+            int(key): EntrySet(Entry.from_dict(entry) for entry in entries)
             for key, entries in self._data.items()
             if key not in NON_SEASON_FIELDS
+            and key.isdigit()
         }
 
     @seasons.setter

@@ -53,7 +53,12 @@ class Downloader:
                     seasons[season].add(entry)
                     break
             else:
-                season = max((seasons or {0: 0}).keys()) + 1
+                int_season_numbers = [
+                    int(season)
+                    for season in seasons
+                    if season.isdigit()
+                ]
+                season = max(int_season_numbers or [0]) + 1
                 seasons[season] = EntrySet([entry])
         # Calculate target paths for entries
         for season, entries in seasons.items():
