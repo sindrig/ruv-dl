@@ -56,7 +56,7 @@ class Downloader:
                 int_season_numbers = [
                     int(season)
                     for season in seasons
-                    if season.isdigit()
+                    if isinstance(season, int) or season.isdigit()
                 ]
                 season = max(int_season_numbers or [0]) + 1
                 seasons[season] = EntrySet([entry])
