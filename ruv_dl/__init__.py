@@ -8,6 +8,7 @@ import click
 import multiprocessing
 from multiprocessing.pool import ThreadPool
 
+from ruv_dl.runtime import settings
 from ruv_dl.programs import ProgramFetcher
 from ruv_dl.crawler import Crawler
 from ruv_dl.downloader import Downloader
@@ -36,6 +37,8 @@ logger.setLevel(logging.WARN)
 )
 @click.pass_context
 def cli(ctx, dryrun, verbosity, empty_cache, destination):
+    with settings:
+        settings.dryrun = dryrun
     ctx.obj['dryrun'] = dryrun
     ctx.obj['destination'] = destination
     if verbosity is not None:

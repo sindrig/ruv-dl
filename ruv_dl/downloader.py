@@ -9,6 +9,7 @@ from ruv_dl.data import Entry, EntrySet
 from ruv_dl.programs import ProgramInfo
 from ruv_dl.constants import PROGRAM_INFO_FN
 from ruv_dl.migrations import MIGRATIONS
+from ruv_dl.runtime import settings
 
 logger = logging.getLogger(__name__)
 PROGRAM_INFO_VERSION = max(MIGRATIONS.keys())
@@ -91,7 +92,8 @@ class Downloader:
             found_etags += [entry.etag for entry in entries]
 
         program_info.seasons = seasons
-        program_info.write()
+        if not settings.dryrun:
+            program_info.write()
 
         missing_migrations = range(
             program_info.version,
