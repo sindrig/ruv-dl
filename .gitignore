@@ -17,3 +17,5 @@ __pycache__/
 /.tox/
 
 /test-results/
+
+/.eggs/

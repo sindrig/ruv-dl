@@ -14,6 +14,8 @@ logger = logging.getLogger(__name__)
 
 class ProgramInfo:
     def __init__(self, fn, initialize_empty=False):
+        if os.path.exists(fn) and os.path.isdir(fn):
+            fn = os.path.join(fn, PROGRAM_INFO_FN)
         self.fn = fn
         if initialize_empty:
             self._data = {
@@ -68,8 +70,7 @@ class ProgramInfo:
         return {
             int(key): EntrySet(Entry.from_dict(entry) for entry in entries)
             for key, entries in self._data.items()
-            if key not in NON_SEASON_FIELDS
-            and key.isdigit()
+            if key not in NON_SEASON_FIELDS and key.isdigit()
         }
 
     @seasons.setter

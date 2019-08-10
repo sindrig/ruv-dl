@@ -10,6 +10,7 @@ from multiprocessing.pool import ThreadPool
 
 from ruv_dl.runtime import settings
 from ruv_dl.programs import ProgramFetcher
+from ruv_dl.mover import Mover
 from ruv_dl.crawler import Crawler
 from ruv_dl.downloader import Downloader
 from ruv_dl.migrations import MIGRATIONS
@@ -168,6 +169,18 @@ def download(
 def migrate(ctx, migration):
     for entry in MIGRATIONS[migration]:
         entry(dryrun=ctx.obj['dryrun'], destination=ctx.obj['destination'])
+
+
+@cli.command()
+@click.argument('src', type=click.Path(resolve_path=True, exists=True))
+@click.argument('dst', type=click.Path(resolve_path=True))
+@click.pass_context
+def mv(ctx, src, dst):
+    '''
+        Move season or episode to a new destination. Only supports moving
+        episodes within a season and seasons within programs.
+    '''
+    Mover(src, dst).move()
 
 
 def main():

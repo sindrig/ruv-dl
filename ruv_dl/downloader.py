@@ -28,9 +28,8 @@ class Downloader:
         info_fn = os.path.join(
             self.destination,
             self.program['title'],
-            PROGRAM_INFO_FN,
         )
-        os.makedirs(os.path.dirname(info_fn), exist_ok=True)
+        os.makedirs(info_fn, exist_ok=True)
         try:
             program_info = ProgramInfo(info_fn)
         except FileNotFoundError:
@@ -38,8 +37,8 @@ class Downloader:
         seasons = program_info.seasons
         program_info.program = self.program
         # seasons = {
-        #     1: {entry, entry, entry},
-        #     2: {entry, entry, entry},
+        #     1: EntrySet({entry, entry, entry}),
+        #     2: EntrySet({entry, entry, entry}),
         # }
         # Sort episodes into seasons
         for entry in sorted(
@@ -109,7 +108,6 @@ class Downloader:
             )
         if missing_migrations:
             return []
-
         return [
             entry
             for entry in itertools.chain(*seasons.values())
