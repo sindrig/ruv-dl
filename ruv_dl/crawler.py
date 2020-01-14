@@ -101,7 +101,7 @@ class Crawler:
             return self.get_entry(date, fn)
 
     def get_new_fn(self, fn, direction):
-        known_delimeters = 'AT'
+        known_delimeters = 'ATS'
         for delimiter in known_delimeters:
             try:
                 fn_id, something = fn.split(delimiter)
