@@ -151,7 +151,7 @@ class ProgramFetcher:
             program = program_info.program
             last_updated = parse_datetime(program['last_updated'])
             if (datetime.datetime.now() - last_updated).days > 15:
-                logger.info(
+                logger.warning(
                     'Last updated for %s more than 15 days old, updating!',
                     program['title'],
                 )
