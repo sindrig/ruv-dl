@@ -129,7 +129,7 @@ class Crawler:
         files = set()
         episodes = self.program['episodes']
         if not episodes:
-            raise RuntimeError('No episodes found...')
+            logger.info('No episodes found for %s', self.program['title'])
         for episode in episodes:
             self.prefer_open = 'opid' in episode['file']
             manifest_url = episode['file']

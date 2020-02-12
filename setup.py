@@ -2,7 +2,7 @@ import os
 
 from setuptools import setup, find_packages
 
-VERSION = '0.5.1'
+VERSION = '0.5.2'
 
 ROOT = os.path.abspath(os.path.dirname(__file__))
 
