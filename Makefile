@@ -7,7 +7,7 @@ lint:
 test: clean
 	tox
 
-build: clean
+build: clean lint
 	python setup.py sdist bdist_wheel
 
 check:
