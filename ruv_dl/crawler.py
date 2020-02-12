@@ -154,8 +154,10 @@ class Crawler:
                 if expire_date <= datetime.date.today():
                     logger.warning('File %s expired at %s', fn, expire_date)
                 else:
-                    raise RuntimeError(
-                        'Could not get url for first episode...?'
+                    logger.error(
+                        'Could not get url for first episode from %s for %s',
+                        episode,
+                        self.program['title']
                     )
             logger.debug('Searching backwards in time...')
             for entry in self.crawl(date, fn, direction=-1):
