@@ -1,12 +1,14 @@
 #!/usr/bin/env python
 import json
 import os
+import datetime
 import logging
 import glob
 
 import requests
 
 from ruv_dl.data import Entry, EntrySet
+from ruv_dl.date_utils import parse_datetime
 from ruv_dl.constants import PROGRAM_INFO_FN, NON_SEASON_FIELDS
 
 logger = logging.getLogger(__name__)
@@ -18,9 +20,7 @@ class ProgramInfo:
             fn = os.path.join(fn, PROGRAM_INFO_FN)
         self.fn = fn
         if initialize_empty:
-            self._data = {
-                '__version__': 1
-            }
+            self._data = {'__version__': 1}
         else:
             with open(fn, 'r') as f:
                 try:
@@ -76,8 +76,7 @@ class ProgramInfo:
     @seasons.setter
     def seasons(self, seasons):
         keys = list(
-            key for key in self._data.keys()
-            if key not in NON_SEASON_FIELDS
+            key for key in self._data.keys() if key not in NON_SEASON_FIELDS
         )
         for key in keys:
             del self._data[key]
@@ -106,21 +105,26 @@ class ProgramFetcher:
                 program_id = query
             else:
                 program_id = self.get_program_id(query)
-            r = requests.get(
-                f'https://api.ruv.is/api/programs/program/{program_id}/all'
-            )
-            if r.ok:
-                yield r.json()
+            program = self.get_program_by_id(program_id)
+            if program:
+                yield program
             else:
-                logger.warning(
-                    f'Request for program {program_id} (query {query}) '
-                    f'failed with status code {r.status_code}.'
-                )
+                logger.warning('Got not program for query %s', query)
+
+    def get_program_by_id(self, program_id):
+        r = requests.get(
+            f'https://api.ruv.is/api/programs/program/{program_id}/all'
+        )
+        if r.ok:
+            return r.json()
+        else:
+            logger.warning(
+                f'Request for program {program_id}'
+                f'failed with status code {r.status_code}.'
+            )
 
     def get_program_id(self, query):
-        r = requests.get(
-            f'https://api.ruv.is/api/programs/search/tv/{query}'
-        )
+        r = requests.get(f'https://api.ruv.is/api/programs/search/tv/{query}')
         r.raise_for_status()
         programs = r.json()['programs']
         if not programs:
@@ -144,4 +148,12 @@ class ProgramFetcher:
 
     def get_programs_to_update(self):
         for program_info in self.get_all_program_infos():
+            program = program_info.program
+            last_updated = parse_datetime(program['last_updated'])
+            if (datetime.datetime.now() - last_updated).days > 15:
+                logger.info(
+                    'Last updated for %s more than 15 days old, updating!',
+                    program['title'],
+                )
+                program_info.program = self.get_program_by_id(program['id'])
             yield program_info.program

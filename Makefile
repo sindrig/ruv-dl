@@ -1,8 +1,11 @@
 clean:
 	rm -rf .tmp .eggs build dist *.egg-info
 
+lint:
+	black ruv_dl tests --check
+
 test: clean
-	python setup.py test
+	tox
 
 build: clean
 	python setup.py sdist bdist_wheel

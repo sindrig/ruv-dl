@@ -94,8 +94,7 @@ class Mover:
         for fn in files_in_src:
             src = os.path.join(self.src, fn)
             season, episode = self._get_episode_season_and_number(
-                self.program_info.program,
-                src
+                self.program_info.program, src
             )
             part_change = f'S{str(season).zfill(2)}'
             assert part_change in src
@@ -115,7 +114,6 @@ class Mover:
             del seasons[src_season_no]
             self.program_info.seasons = seasons
             self.program_info.write()
-
 
     def _get_season_number(self, path):
         name = os.path.basename(path)

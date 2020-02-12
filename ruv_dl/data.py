@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 import os
-import datetime
 import logging
 
+from ruv_dl.date_utils import parse_date
 from ruv_dl.constants import DATE_FORMAT
 
 logger = logging.getLogger(__name__)
@@ -26,9 +26,7 @@ class Episode:
 
 
 class Entry:
-    def __init__(
-        self, fn, url, date, etag, episode=None
-    ):
+    def __init__(self, fn, url, date, etag, episode=None):
         self.fn = fn
         self.url = url
         self.date = date
@@ -50,7 +48,7 @@ class Entry:
         return cls(
             fn=data['fn'],
             url=data['url'],
-            date=datetime.datetime.strptime(data['date'], DATE_FORMAT),
+            date=parse_date(data['date']),
             etag=data['etag'],
             episode=data.get('episode'),
         )
@@ -63,11 +61,7 @@ class Entry:
 
     @classmethod
     def get_season_folder(cls, destination, program, season):
-        return os.path.join(
-            destination,
-            program['title'],
-            f'Season {season}',
-        )
+        return os.path.join(destination, program['title'], f'Season {season}',)
 
     def set_target_path(self, path):
         # TODO: Get rid of this maybe
@@ -123,7 +117,7 @@ class EntrySet(set):
                     k,
                     i,
                     entries[i],
-                    target
+                    target,
                 )
                 return target
         logger.warning(

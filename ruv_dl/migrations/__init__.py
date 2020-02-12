@@ -60,12 +60,12 @@ def move_old_locations(destination, dryrun=False):
             elif os.path.isfile(target_dest):
                 temp_path = next(tempfile._get_candidate_names())
                 temp_path = os.path.join(
-                    os.path.dirname(target_dest),
-                    temp_path,
+                    os.path.dirname(target_dest), temp_path,
                 )
                 logger.info(
                     '%s exists. Moving temporarily to %s and postponing',
-                    target_dest, temp_path,
+                    target_dest,
+                    temp_path,
                 )
                 shutil.move(src_dest, temp_path)
                 files_to_move.append((temp_path, target_dest))
@@ -79,6 +79,4 @@ def move_old_locations(destination, dryrun=False):
             program_info.write()
 
 
-MIGRATIONS = {
-    1: (move_old_locations, )
-}
+MIGRATIONS = {1: (move_old_locations,)}

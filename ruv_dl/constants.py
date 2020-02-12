@@ -1,7 +1,9 @@
 import os
 
 DATE_FORMAT = '%Y/%m/%d'
+DATE_FORMATS = (DATE_FORMAT, '%Y-%m-%d')
 DATETIME_FORMAT = '%Y-%m-%d %H:%M:%S'
+DATETIME_FORMATS = (DATETIME_FORMAT, '%Y-%m-%dT%H:%M:%S')
 DATE_PART_LENGTH = 4 + 1 + 2 + 1 + 2
 URL_TEMPLATE = (
     'http://smooth.ruv.cache.is/{openclose}/{date}/2400kbps/{fn}.mp4'

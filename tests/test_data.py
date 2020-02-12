@@ -25,8 +25,11 @@ def test_entry_from_dict():
 
 def test_entry_to_dict():
     e = Entry(
-        'some_fn', 'some_url', datetime.datetime(2017, 6, 14),
-        'some_etag', {'id': 'some_episode'}
+        'some_fn',
+        'some_url',
+        datetime.datetime(2017, 6, 14),
+        'some_etag',
+        {'id': 'some_episode'},
     )
     assert e.to_dict() == {
         'fn': 'some_fn',
@@ -59,9 +62,7 @@ def test_choose_best_item():
         'number': 2,
     }
     item1 = Entry('fn1', 'url1', datetime.datetime.min, 'etag1', None)
-    item2 = Entry(
-        'fn2', 'url2', datetime.datetime.min, 'etag2', episode_real
-    )
+    item2 = Entry('fn2', 'url2', datetime.datetime.min, 'etag2', episode_real)
     assert s._choose_best_item(item1, item2).episode.to_dict() == episode_real
     assert s._choose_best_item(item2, item1).episode.to_dict() == episode_real
 
@@ -70,7 +71,11 @@ def test_choose_best_item():
     assert s._choose_best_item(item2, item1).episode.to_dict() == episode_real
 
     item2.episode = None
-    assert s._choose_best_item(
-        item1, item2).episode.to_dict() == episode_generated
-    assert s._choose_best_item(
-        item2, item1).episode.to_dict() == episode_generated
+    assert (
+        s._choose_best_item(item1, item2).episode.to_dict()
+        == episode_generated
+    )
+    assert (
+        s._choose_best_item(item2, item1).episode.to_dict()
+        == episode_generated
+    )

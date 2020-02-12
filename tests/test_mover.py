@@ -12,13 +12,18 @@ def create_program_info(location='/tv/Program', seasons=None):
     pi = ProgramInfo(location, initialize_empty=True)
     pi.program = {'id': 'some-id', 'title': 'Program'}
     pi.seasons = {
-        key: EntrySet([
-            Entry(
-                '', '', datetime.datetime(2020, 1, 10), f'e{number}',
-                episode={'number': number}
-            )
-            for number in value
-        ])
+        key: EntrySet(
+            [
+                Entry(
+                    '',
+                    '',
+                    datetime.datetime(2020, 1, 10),
+                    f'e{number}',
+                    episode={'number': number},
+                )
+                for number in value
+            ]
+        )
         for key, value in (seasons or {}).items()
     }
     pi.write()
@@ -132,48 +137,40 @@ def test_move_episode_raises_if_moving_between_seasons(fs):
     with pytest.raises(RuntimeError) as e:
         Mover(
             '/tv/Program/Season 1/Program - S01E01.mp4',
-            '/tv/Program/Season 2/Program - S02E01.mp4'
+            '/tv/Program/Season 2/Program - S02E01.mp4',
         ).move()
     assert 'Moving episodes between seasons is not supported' in str(e.value)
 
 
 def test_move_episode_fails_if_src_episode_not_exists_in_program_info(fs):
     os.makedirs('/tv/Program/Season 1')
-    create_program_info(seasons={
-        1: []
-    })
+    create_program_info(seasons={1: []})
     with open('/tv/Program/Season 1/S01E01.mp4', 'w') as f:
         f.write('S01E01')
     with pytest.raises(ProgramInfoError) as e:
         Mover(
             '/tv/Program/Season 1/Program - S01E01.mp4',
-            '/tv/Program/Season 1/Program - S01E02.mp4'
+            '/tv/Program/Season 1/Program - S01E02.mp4',
         ).move()
     assert 'Source episode not found in program info file' in str(e.value)
 
 
 def test_move_episode_fails_if_dst_episode_exists_in_program_info(fs):
     os.makedirs('/tv/Program/Season 1')
-    create_program_info(seasons={
-        1: [1, 2]
-    })
+    create_program_info(seasons={1: [1, 2]})
     with open('/tv/Program/Season 1/S01E01.mp4', 'w') as f:
         f.write('S01E01')
     with pytest.raises(ProgramInfoError) as e:
         Mover(
             '/tv/Program/Season 1/Program - S01E01.mp4',
-            '/tv/Program/Season 1/Program - S01E02.mp4'
+            '/tv/Program/Season 1/Program - S01E02.mp4',
         ).move()
     assert 'Destination episode found in program info file' in str(e.value)
 
 
 def test_move_episode_requires_correct_naming_schema(fs):
     os.makedirs('/tv/Program/Season 1/')
-    create_program_info(
-        seasons={
-            1: [1]
-        }
-    )
+    create_program_info(seasons={1: [1]})
     with open('/tv/Program/Season 1/S01E01.mp4', 'w') as f:
         f.write('incorrect name')
     with open('/tv/Program/Season 1/Program 1x1.mp4', 'w') as f:
@@ -186,37 +183,33 @@ def test_move_episode_requires_correct_naming_schema(fs):
     with pytest.raises(NamingSchemaError) as e:
         Mover(
             '/tv/Program/Season 1/S01E01.mp4',
-            '/tv/Program/Season 1/Program - S01E02.mp4'
+            '/tv/Program/Season 1/Program - S01E02.mp4',
         ).move()
     assert 'Episode/season number not determined from' in str(e.value)
 
     with pytest.raises(NamingSchemaError) as e:
         Mover(
             '/tv/Program/Season 1/Program 1x1.mp4',
-            '/tv/Program/Season 1/Program - S01E02.mp4'
+            '/tv/Program/Season 1/Program - S01E02.mp4',
         ).move()
     assert 'Episode/season number not determined from' in str(e.value)
 
     with pytest.raises(NamingSchemaError) as e:
         Mover(
             '/tv/Program/Season 1/NotProgram.mp4',
-            '/tv/Program/Season 1/Program - S01E02.mp4'
+            '/tv/Program/Season 1/Program - S01E02.mp4',
         ).move()
     assert 'Episode/season number not determined from' in str(e.value)
 
 
 def test_move_episode(fs):
     os.makedirs('/tv/Program/Season 1/')
-    create_program_info(
-        seasons={
-            1: [1]
-        }
-    )
+    create_program_info(seasons={1: [1]})
     with open('/tv/Program/Season 1/Program - S01E01.mp4', 'w') as f:
         f.write('correct name')
     Mover(
         '/tv/Program/Season 1/Program - S01E01.mp4',
-        '/tv/Program/Season 1/Program - S01E02.mp4'
+        '/tv/Program/Season 1/Program - S01E02.mp4',
     ).move()
     assert os.path.exists('/tv/Program/Season 1/Program - S01E02.mp4')
     assert not os.path.exists('/tv/Program/Season 1/Program - S01E01.mp4')

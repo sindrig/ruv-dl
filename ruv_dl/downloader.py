@@ -25,10 +25,7 @@ class Downloader:
     def organize(self):
         # TODO: Use ProgramInfo class
         logger.info(f'Organizing {self.program["title"]}')
-        info_fn = os.path.join(
-            self.destination,
-            self.program['title'],
-        )
+        info_fn = os.path.join(self.destination, self.program['title'],)
         os.makedirs(info_fn, exist_ok=True)
         try:
             program_info = ProgramInfo(info_fn)
@@ -42,8 +39,7 @@ class Downloader:
         # }
         # Sort episodes into seasons
         for entry in sorted(
-            self.episode_entries,
-            key=lambda entry: entry.date
+            self.episode_entries, key=lambda entry: entry.date
         ):
             for season in seasons.keys():
                 if any(
@@ -71,14 +67,8 @@ class Downloader:
                     entry.episode.number = EntrySet.find_target_number(
                         entries, i
                     )
-                basename = entry.get_target_basename(
-                    self.program,
-                    season,
-                )
-                target_path = os.path.join(
-                    season_folder,
-                    basename,
-                )
+                basename = entry.get_target_basename(self.program, season,)
+                target_path = os.path.join(season_folder, basename,)
                 entry.set_target_path(target_path)
         # Finally, make sure we don't have the same etag multiple times,
         # prefer the first one in chronological order
@@ -94,10 +84,7 @@ class Downloader:
         if not settings.dryrun:
             program_info.write()
 
-        missing_migrations = range(
-            program_info.version,
-            PROGRAM_INFO_VERSION,
-        )
+        missing_migrations = range(program_info.version, PROGRAM_INFO_VERSION,)
         for migration_entry in missing_migrations:
             logger.error(
                 'Missing migration %d. Run `ruv-dl migrate %d`. You can '
@@ -144,7 +131,7 @@ class Downloader:
                         )
                     f.write(chunk)
 
-            size = int(os.path.getsize(entry.target_path) / 1024**2)
+            size = int(os.path.getsize(entry.target_path) / 1024 ** 2)
             logger.warning(
                 f'{entry.target_path} ({size}MB) '
                 f'downloaded in {int(time.time() - start)}s!'
