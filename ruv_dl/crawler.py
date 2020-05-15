@@ -38,13 +38,17 @@ class Crawler:
     def get_entry(self, date, fn, episode=None):
         cache_key = f'{date.strftime(DATE_FORMAT)}-{fn}'
         if not self.cache.has(cache_key):
-            r = requests.head(
-                URL_TEMPLATE.format(
-                    date=date.strftime(DATE_FORMAT),
-                    fn=fn,
-                    openclose='opid' if self.prefer_open else 'lokad',
+            try:
+                r = requests.head(
+                    URL_TEMPLATE.format(
+                        date=date.strftime(DATE_FORMAT),
+                        fn=fn,
+                        openclose='opid' if self.prefer_open else 'lokad',
+                    )
                 )
-            )
+            except Exception as e:
+                logger.error('Error getting entry: %s', e)
+                return None
             logger.info(
                 'Checking %s - %s - %s (is_open: %s)'
                 % (date.strftime(DATE_FORMAT), fn, r.ok, self.prefer_open,)
