@@ -23,7 +23,7 @@ setup(
     packages=find_packages(),
     python_requires='>=3.6.0',
     install_requires=[
-        'requests==2.22.0',
+        'requests==2.31.0',
         'click==7.0',
     ],
     entry_points={
